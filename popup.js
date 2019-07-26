@@ -6,15 +6,15 @@ document.addEventListener('DOMContentLoaded', function() {
 var archiveLink;
 
 function archivePage() {
-    const url = window.location.href;
-
+    // const url = window.location.href;
+    const url = "wikipedia.org"
     fetch(`http://archive.org/wayback/available?url=${url}`).then(data => {
         if (!data.archived_snapshots.closest) { 
             savePage(data, url)
         } else {
-            archiveLink = archived_snapshots.closest.url;
+            archiveLink = data.archived_snapshots.closest.url;
         }
-    }).catch(err => Console.error(err))
+    }).catch(err => console.error(err))
 
 }
 

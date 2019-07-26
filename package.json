@@ -1,0 +1,22 @@
+{
+  "name": "are.na-plus",
+  "version": "1.0.0",
+  "description": "",
+  "main": "autonomous.js",
+  "scripts": {
+    "test": "start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gdjohnson/Are.na-Plus.git"
+  },
+  "author": "suspendedreason",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gdjohnson/Are.na-Plus/issues"
+  },
+  "homepage": "https://github.com/gdjohnson/Are.na-Plus#readme",
+  "dependencies": {
+    "are.na": "^0.1.1"
+  }
+}

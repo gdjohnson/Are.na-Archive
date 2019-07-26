@@ -2,7 +2,7 @@
   "name": "are.na-plus",
   "version": "1.0.0",
   "description": "",
-  "main": "autonomous.js",
+  "main": "popupt.js",
   "scripts": {
     "test": "start"
   },
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/gdjohnson/Are.na-Plus#readme",
   "dependencies": {
-    "are.na": "^0.1.1"
+    "are.na": "^0.1.1",
+    "node-fetch": "^2.6.0"
   }
 }

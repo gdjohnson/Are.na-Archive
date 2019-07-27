@@ -27,7 +27,7 @@ async function fetchChans(id){
     debugger
     let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
     debugger
-    let classification = await sources.map(chan => checkArchive(chan));
+    let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
     console.log(classification)
     return classification;
 }
@@ -50,9 +50,7 @@ function extractSources(chan) {
 
 async function checkArchive(chan) {
     debugger
-    let results = await chan.map(async (source) => {
-        await singleCheck(source);
-    })
+    let results = await Promise.all(chan.map(source => singleCheck(source)))
     debugger
     // RIGHT NOW ALL RESULTS ARE RETURNING UNDEFINED
     return results

@@ -16,18 +16,14 @@ const options = {
 
 async function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
-    const accessToken = config.arenaToken;
-    const userId = config.arenaUserId;
-    arena = new Arena({accessToken});
-    results = await fetchChans(userId);
+    const {arenaUserId, arenaToken} = config;
+    const results = await fetchChans(arenaUserId, arenaToken);
     console.log(results["resource"])
     displayResults(results)
 }
 
-async function fetchChans(id){
-    // linkBlocks take form of {title: title, resource: block}
-    // sources take form of {title: title, resource: url}
-
+async function fetchChans(id, token){
+    const arena = new Arena({token});
     let chans = await arena.user(id).channels()
     chans = chans.map(chan => {
                 const {id, title, contents} = chan;

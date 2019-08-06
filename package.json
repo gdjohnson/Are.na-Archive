@@ -18,7 +18,6 @@
   "homepage": "https://github.com/gdjohnson/Are.na-Plus#readme",
   "dependencies": {
     "are.na": "^0.1.1",
-    "node-fetch": "^2.6.0",
-    "wayback-machine": "^0.2.1"
+    "node-fetch": "^2.6.0"
   }
 }

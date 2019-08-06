@@ -2408,33 +2408,30 @@ const fetch = require('node-fetch');
 
 
 var allChans = [];
-var allLinkItems = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('archivePage').addEventListener('click', archiveLinks)
-})
+// document.addEventListener('DOMContentLoaded', () => {
+//     document.getElementById('archivePage').addEventListener('click', archiveLinks)
+// })
 
 function archiveLinks(){
-    const accessToken = document.forms['archiveNow']['code'].value
-    console.log(accessToken)
+    // const accessToken = document.forms['archiveNow']['code'].value
+    const accessToken = '95daa05f0f6a1a1094dea33f976e662f09fcc0b7d875df4a4799e06be7dbaa12';
     arena = new Arena({accessToken});
     
     let id=13854;
-    debugger
     fetchChans(id)
 }
 
 async function fetchChans(id){
-    debugger
     let chans = await arena.user(id).channels()
-    chans.map(chan => {
+    chans = chans.map(chan => {
                 const {id, title, contents} = chan;
-                allChans.push({id, title, contents});
+                return ({id, title, contents});
             })
-    let linkBlocks = allChans.map(chan => findLinks(chan));
-    let sources = linkBlocks.map(chan => extractSources(chan));
-    let classification = await sources.map(chan => checkArchive(chan));
-
+    let linkBlocks = chans.map(chan => findLinks(chan)).filter(arr => arr.length > 0);
+    let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
+    let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
+    // console.log(classification)
     return classification;
 }
 
@@ -2445,21 +2442,18 @@ function findLinks(chan){
 }
 
 function extractSources(chan) {
-   
     let sources = chan.map(block => {
         if (block.source) {
             return block.source.url;
         }
     })
 
-    return sources.filter( Boolean )        
+    return sources.filter(Boolean)        
 }
 
 async function checkArchive(chan) {
-    let results = await chan.map(source => {
-        singleCheck(source);
-    })
-
+    let results = await Promise.all(chan.map(source => singleCheck(source)))
+    // RIGHT NOW ALL RESULTS ARE RETURNING UNDEFINED
     return results
 }
 
@@ -2467,41 +2461,58 @@ async function checkArchive(chan) {
 
 async function singleCheck(url) {
     let obj = {};
-
-
-
-    let res = await fetch(`http://archive.org/wayback/available?url=${url}*&output=json`);
-    res.json()
-        .then((res) => {
-            if (res["archived_snapshots"]) { 
-                obj.preserved = true;
-                obj.arxLink = res.archived_snapshots.closest.url;
-                obj.liveLink = url;
-            } 
-        }, () => { 
-            savePage(url);
-        })
-        .then(()=> {  
-            console.log(obj);
-            appendToPage(obj);
-            allLinkItems.push(obj);
-        })
+    if (filterWaybackLinks(url)) { return ({preserved: true, arxLink: url, liveLink: ''})}
+    let res = await fetch(`http://archive.org/wayback/available?url=${url}`);
+    try { 
+        debugger
+        res = await res.json() 
+        if (res["archived_snapshots"]) { 
+            obj.preserved = true;
+            obj.arxLink = res.archived_snapshots.closest.url;
+            obj.liveLink = url;
+        } 
+        else { 
+            console.log("LINE 75") 
+        }
+    }
+    // ALL THE OBJS ARE FAILING
+    catch { obj = await savePage(url) }
+        
+    // appendToPage(obj);
+    // console.log(obj)
+    debugger
+    return obj;
 }
 
-function savePage(url) {
+function filterWaybackLinks(str) {
+    if (str.includes('web.archive.org')) {
+		return true;
+    }
+    return false;
+} 
+
+async function savePage(url) {
     let obj = {};
-    console.log(`Saving ${url} now.`)
-    return fetch(`https://web.archive.org/save/${url}`)
-        .then(response => response.json())
-        .catch(() => { 
-            console.log(`The page at ${url} can't be archived.`)
-            obj.preserved = false;
-            obj.arxLink = '';
-            obj.liveLink = url;
-            console.log(obj)
-        })
-        .then(() => { console.log("This save actually worked!")})
-        .then(() => { allLinkItems.push(obj) })
+    
+    let res;
+    try {
+        // console.log(`Saving ${url} now.`)
+        res = await fetch(`https://web.archive.org/save/${url}`);
+        res = await res.json();
+        console.log(`LINE 92 Results: `)
+        console.log(res)
+        // NEEDS TO CREATE OBJ FOR SUCCESSES
+    }
+    catch {
+        // console.log(`The page at ${url} can't be archived.`)
+        obj.preserved = false;
+        obj.arxLink = '';
+        obj.liveLink = url;
+        console.log(`LINE 110`)
+        console.log(url)
+    }
+    
+    return obj;
 }
 
 function appendToPage(obj) {
@@ -2512,6 +2523,7 @@ function appendToPage(obj) {
     document.querySelector('archiveNow').append(graf);
 }
 
+archiveLinks()
 },{"are.na":1,"node-fetch":28}],35:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};

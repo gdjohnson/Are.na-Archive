@@ -10,7 +10,7 @@ var allChans = [];
 
 function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
-    const accessToken = '';
+    const accessToken = '95daa05f0f6a1a1094dea33f976e662f09fcc0b7d875df4a4799e06be7dbaa12';
     arena = new Arena({accessToken});
     
     let id=13854;
@@ -24,11 +24,9 @@ async function fetchChans(id){
                 return ({id, title, contents});
             })
     let linkBlocks = chans.map(chan => findLinks(chan)).filter(arr => arr.length > 0);
-    debugger
     let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
-    debugger
     let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
-    console.log(classification)
+    // console.log(classification)
     return classification;
 }
 
@@ -49,9 +47,7 @@ function extractSources(chan) {
 }
 
 async function checkArchive(chan) {
-    debugger
     let results = await Promise.all(chan.map(source => singleCheck(source)))
-    debugger
     // RIGHT NOW ALL RESULTS ARE RETURNING UNDEFINED
     return results
 }
@@ -60,18 +56,18 @@ async function checkArchive(chan) {
 
 async function singleCheck(url) {
     let obj = {};
-    if (filterWaybackLinks(url)) { return ({preserved: true, arxLink: url})}
-    let res = await fetch(`http://archive.org/wayback/available?url=${url}*&output=json`);
-    debugger
+    if (filterWaybackLinks(url)) { return ({preserved: true, arxLink: url, liveLink: ''})}
+    let res = await fetch(`http://archive.org/wayback/available?url=${url}`);
     try { 
-        res = await res.json() 
-        if (res["archived_snapshots"]) { 
+        debugger
+        let json = await res.json() 
+        if (json["archived_snapshots"]) { 
             obj.preserved = true;
-            obj.arxLink = res.archived_snapshots.closest.url;
+            obj.arxLink = json.archived_snapshots.closest.url;
             obj.liveLink = url;
         } 
         else { 
-            console.error("LINE 75") 
+            console.log("LINE 75") 
         }
     }
     // ALL THE OBJS ARE FAILING
@@ -97,15 +93,16 @@ async function savePage(url) {
     try {
         // console.log(`Saving ${url} now.`)
         res = await fetch(`https://web.archive.org/save/${url}`);
-        // console.log(`LINE 92 Results: ` + res)
+        res = await res.json();
+        console.log(`LINE 92 Results: `)
+        console.log(res)
         // NEEDS TO CREATE OBJ FOR SUCCESSES
     }
     catch {
-        // console.log(`The page at ${url} can't be archived.`)
+        console.log(`The page at ${url} can't be archived. \n`)
         obj.preserved = false;
         obj.arxLink = '';
         obj.liveLink = url;
-        // console.log(obj)
     }
     
     return obj;

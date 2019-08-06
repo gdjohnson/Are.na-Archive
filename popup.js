@@ -1,5 +1,7 @@
 const Arena = require('are.na');
 const fetch = require('node-fetch');
+const config = require('./config.json');
+
 
 
 var allChans = [];
@@ -10,7 +12,7 @@ var allChans = [];
 
 function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
-    const accessToken = '95daa05f0f6a1a1094dea33f976e662f09fcc0b7d875df4a4799e06be7dbaa12';
+    const accessToken = config.accessKey;
     arena = new Arena({accessToken});
     
     let id=13854;

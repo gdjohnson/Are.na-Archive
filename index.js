@@ -67,7 +67,6 @@ async function singleCheck(url) {
     }
 
     let json; let tries=0;
-    
     let object = await async function (){
         try {
             // Try fetch up to 12 times to sidestep 503 issue
@@ -79,11 +78,9 @@ async function singleCheck(url) {
                 } catch {
                     tries++
                 }
-            }
-            
+            }    
             const arxLink = await json.archived_snapshots.closest.url;
-            return createObject(true, arxLink, url)
-            
+            return createObject(true, arxLink, url) 
         } catch {
             let result = await savePage(url)
             return result;
@@ -93,14 +90,8 @@ async function singleCheck(url) {
     return object;
 }
 
-function createObject(boolean, arxLink, liveLink){
-    // console.log(arxLink + ' is successfully saved! \n')
-    return ({preserved: boolean, arxLink, liveLink})
-}
-
 async function savePage(url) {    
     let res;
-
     let object = await async function (){
         try {
             // console.log(`Saving ${url} now.`)
@@ -114,8 +105,11 @@ async function savePage(url) {
             return createObject(false, '', url)
         }
     }()
-    
     return object;
+}
+
+function createObject(preserved, arxLink, liveLink){
+    return ({preserved, arxLink, liveLink})
 }
 
 function displayResults(results) {

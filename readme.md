@@ -2,15 +2,14 @@
 
 archiveLinks() kicks off with access and userId from config file, invokes fetchChans()
 
-fetchChans() extracts chanId/title/contents, isolates link blocks with findLinks(chan)
-
-    * invokes extractSources(chan) to get the URIs from each link block
-
-    * fetchChans() then invokes async checkArchive(chan), which fetches one at a time w/ singleCheck(uri)
+fetchChans() hosts bulk of function invocation
+* extracts chanId/title/contents
+* isolates link blocks with findLinks(chan)
+* invokes extractSources(chan) to get the URIs from each link block
+* fetchChans() then invokes async checkArchive(chan), which fetches one at a time w/ singleCheck(uri)
 
 objects are formatted w/ props 'title' (of chan) and 'resource'
-
-    *'resource' contains obj w/ props 'preserved' (Boolean), 'arxLink' (Wayback URI), 'liveLink' (URI)
+* 'resource' contains obj w/ props 'preserved' (Boolean), 'arxLink' (Wayback URI), 'liveLink' (URI)
 
 
 

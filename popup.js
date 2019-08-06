@@ -16,13 +16,6 @@ const config = require('./config.json');
 // Like it's not just random, there's a clear pattern of some links' Archive availability resource 503ing more often than others
 // I should probably just have a function that recursively tries 503 responses until they succeed, w/ upper limit like 20 fetches
 
-
-var allChans = [];
-
-// document.addEventListener('DOMContentLoaded', () => {
-//     document.getElementById('archivePage').addEventListener('click', archiveLinks)
-// })
-
 function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
     const accessToken = config.arenaToken;
@@ -41,7 +34,7 @@ async function fetchChans(id){
     let linkBlocks = chans.map(chan => findLinks(chan)).filter(arr => arr.length > 0);
     let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
     let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
-    // console.log(classification)
+    console.log(classification)
     return classification;
 }
 
@@ -63,13 +56,14 @@ function extractSources(chan) {
 
 async function checkArchive(chan) {
     let results = await Promise.all(chan.map(source => singleCheck(source)))
-    // RIGHT NOW ALL RESULTS ARE RETURNING UNDEFINED
     return results
 }
 
-// [{preserved:true, arxLink:'', originalUrl:''}]
-
 async function singleCheck(url) {
+    if (url.includes('web.archive.org')) {
+        createObject(true, url, false)
+    }
+
     const options = { headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json', }}
@@ -87,10 +81,8 @@ async function singleCheck(url) {
             }
         }
         
-        obj.preserved = true;
-        obj.arxLink = json.archived_snapshots.closest.url;
-        obj.liveLink = url;
-        console.log(obj.arxLink + ' is successfully saved! \n')
+        const arxLink = json.archived_snapshots.closest.url;
+        obj = createObject(true, arxLink, url)
         
     } catch {
         // obj = await savePage(url)
@@ -99,12 +91,10 @@ async function singleCheck(url) {
     return obj;
 }
 
-function filterWaybackLinks(str) {
-    if (str.includes('web.archive.org')) {
-		return true;
-    }
-    return false;
-} 
+function createObject(boolean, arxLink, liveLink){
+    console.log(arxLink + ' is successfully saved! \n')
+    return ({preserved: boolean, arxLink, liveLink})
+}
 
 async function savePage(url) {
     let obj = {};

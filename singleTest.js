@@ -1,11 +1,6 @@
 const fetch = require('node-fetch');
 const wayback = require('wayback-machine');
 
-// My problem:
-// I can run the same fetch on the same URL ten times, and it'll 503 nine of the times but work once, 
-// or another URL 200s and returns JSON just fine nine times out of ten, but every once and a while 503s? 
-// Like it's not just random, there's a clear pattern of some links' Archive availability resource 503ing more often than others
-// I should probably just have a function that recursively tries 503 responses until they succeed, w/ upper limit like 20 fetches
 
 
 URLs = ['https://www.are.na/blog/sarah-hamerman', 'https://charlottelennox.livejournal.com/887.html', 'http://slatestarcodex.com/2016/07/25/how-the-west-was-won/']

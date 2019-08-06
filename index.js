@@ -10,20 +10,6 @@ const options = {
     }
 }
 
-// FLOW
-// archiveLinks() kicks off with access and userId, invokes fetchChans
-// fetchChans() takes userId, extracts chanId/title/contents, isolates link blocks with findLinks(chan)
-// fetchChans() then invokes extractSources(chan) to get the URLs from each link block
-// fetchChans() then invokes async checkArchive(chan), which sends links one at a time to fetch Archive URL with 
-//      singleCheck(url) 
-
-
-// 503 ISSUE
-// I can run the same fetch on the same URL ten times, and it'll 503 nine of the times but work once, 
-// or another URL 200s and returns JSON just fine nine times out of ten, but every once and a while 503s? 
-// Like it's not just random, there's a clear pattern of some links' Archive availability resource 503ing more often than others
-// I should probably just have a function that recursively tries 503 responses until they succeed, w/ upper limit like 20 fetches
-
 // document.addEventListener('DOMContentLoaded', () => {
 //     document.getElementById('archivePage').addEventListener('click', archiveLinks)
 // })

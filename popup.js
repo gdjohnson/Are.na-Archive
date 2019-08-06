@@ -2,6 +2,15 @@ const Arena = require('are.na');
 const fetch = require('node-fetch');
 const config = require('./config.json');
 
+const options = { 
+    mode: 'no-cors',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
+}
+
+
 // FLOW
 // archiveLinks() kicks off with access and userId, invokes fetchChans
 // fetchChans() takes userId, extracts chanId/title/contents, isolates link blocks with findLinks(chan)
@@ -16,13 +25,17 @@ const config = require('./config.json');
 // Like it's not just random, there's a clear pattern of some links' Archive availability resource 503ing more often than others
 // I should probably just have a function that recursively tries 503 responses until they succeed, w/ upper limit like 20 fetches
 
-function archiveLinks(){
+// document.addEventListener('DOMContentLoaded', () => {
+//     document.getElementById('archivePage').addEventListener('click', archiveLinks)
+// })
+
+async function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
     const accessToken = config.arenaToken;
+    const userId = config.arenaUserId;
     arena = new Arena({accessToken});
-    
-    let id=13854;
-    fetchChans(id)
+    results = await fetchChans(userId);
+    displayResults(results)
 }
 
 async function fetchChans(id){
@@ -34,7 +47,7 @@ async function fetchChans(id){
     let linkBlocks = chans.map(chan => findLinks(chan)).filter(arr => arr.length > 0);
     let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
     let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
-    console.log(classification)
+    // console.log(classification)
     return classification;
 }
 
@@ -56,6 +69,7 @@ function extractSources(chan) {
 
 async function checkArchive(chan) {
     let results = await Promise.all(chan.map(source => singleCheck(source)))
+    // debugger
     return results
 }
 
@@ -64,58 +78,64 @@ async function singleCheck(url) {
         createObject(true, url, false)
     }
 
-    const options = { headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json', }}
-
-    let json; let tries=0; let obj={};
-    try {
-        // Try fetch to 10 times to sidestep 503 issue
-        while(!json && tries < 10){
-            let res = await fetch(`http://archive.org/wayback/available?url=${url}`, options)
-                        .catch(err => { console.log(err) });
-            try {
-                json = await res.json() 
-            } catch {
-                tries++
+    let json; let tries=0;
+    
+    let object = await async function (){
+        try {
+            // Try fetch to 10 times to sidestep 503 issue
+            while(!json && tries < 10){
+                let res = await fetch(`http://archive.org/wayback/available?url=${url}`, options)
+                            .catch(err => { console.log(err) });
+                try {
+                    json = await res.json() 
+                } catch {
+                    tries++
+                }
             }
+            
+            const arxLink = await json.archived_snapshots.closest.url;
+            return createObject(true, arxLink, url)
+            
+        } catch {
+            let result = await savePage(url)
+            return result;
         }
-        
-        const arxLink = json.archived_snapshots.closest.url;
-        obj = createObject(true, arxLink, url)
-        
-    } catch {
-        // obj = await savePage(url)
-    }
+    }()
 
-    return obj;
+    return object;
 }
 
 function createObject(boolean, arxLink, liveLink){
-    console.log(arxLink + ' is successfully saved! \n')
+    // console.log(arxLink + ' is successfully saved! \n')
     return ({preserved: boolean, arxLink, liveLink})
 }
 
-async function savePage(url) {
-    let obj = {};
-    
+async function savePage(url) {    
     let res;
-    try {
-        // console.log(`Saving ${url} now.`)
-        res = await fetch(`https://web.archive.org/save/${url}`);
-        res = await res.json();
-        console.log(`LINE 92 Results: `)
-        console.log(res)
-        // NEEDS TO CREATE OBJ FOR SUCCESSES
-    }
-    catch {
-        console.log(`The page at ${url} can't be archived. \n`)
-        obj.preserved = false;
-        obj.arxLink = '';
-        obj.liveLink = url;
-    }
+
+    let object = await async function (){
+        try {
+            // console.log(`Saving ${url} now.`)
+            res = await fetch(`https://web.archive.org/save/${url}`, options);
+            json = await res.json();
+            const arxLink = json.archived_snapshots.closest.url;
+            return createObject(true, arxLink, url)
+        }
+        catch {
+            // console.log(`The page at ${url} can't be archived. \n`)
+            return createObject(false, '', url)
+        }
+    }()
     
-    return obj;
+    return object;
+}
+
+function displayResults(results) {
+    for(let i=0; i<results.length; i++){
+        for(let j=0; j<results[i].length; j++){
+            console.log(results[i][j])
+        }
+    }
 }
 
 function appendToPage(obj) {

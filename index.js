@@ -17,13 +17,13 @@ const options = {
 async function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
     const {arenaUserId, arenaToken} = config;
-    const results = await fetchChans(arenaUserId, arenaToken);
-    console.log(results["resource"])
+    const results = await fetchChans(arenaUserId, arenaToken).catch(err => { console.error(err)});
+    // console.log(results["resource"])
     displayResults(results)
 }
 
-async function fetchChans(id, token){
-    const arena = new Arena({token});
+async function fetchChans(id, accessToken){
+    const arena = new Arena({accessToken});
     let chans = await arena.user(id).channels()
     chans = chans.map(chan => {
                 const {id, title, contents} = chan;

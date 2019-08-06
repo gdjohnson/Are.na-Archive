@@ -10,7 +10,6 @@ const options = {
     }
 }
 
-
 // FLOW
 // archiveLinks() kicks off with access and userId, invokes fetchChans
 // fetchChans() takes userId, extracts chanId/title/contents, isolates link blocks with findLinks(chan)
@@ -35,10 +34,14 @@ async function archiveLinks(){
     const userId = config.arenaUserId;
     arena = new Arena({accessToken});
     results = await fetchChans(userId);
+    console.log(results["resource"])
     displayResults(results)
 }
 
 async function fetchChans(id){
+    // linkBlocks take form of {title: title, resource: block}
+    // sources take form of {title: title, resource: url}
+
     let chans = await arena.user(id).channels()
     chans = chans.map(chan => {
                 const {id, title, contents} = chan;
@@ -47,29 +50,32 @@ async function fetchChans(id){
     let linkBlocks = chans.map(chan => findLinks(chan)).filter(arr => arr.length > 0);
     let sources = linkBlocks.map(chan => extractSources(chan)).filter(arr => arr.length > 0);
     let classification = await Promise.all(sources.map(chan => checkArchive(chan)));
-    // console.log(classification)
     return classification;
 }
 
 function findLinks(chan){
-    return chan.contents.map(block => {
-        if (block.class = 'Link') { return block; }
+    const { title } = chan;
+    return chan.contents.map(resource => {
+        if (resource.class = 'Link') return {title, resource}
     })
 }
 
 function extractSources(chan) {
+    const { title } = chan[0];
     let sources = chan.map(block => {
-        if (block.source) {
-            return block.source.url;
+        if (block["resource"].source) {
+            return {title, "resource": block["resource"].source.url};
         }
     })
-
     return sources.filter(Boolean)        
 }
 
 async function checkArchive(chan) {
-    let results = await Promise.all(chan.map(source => singleCheck(source)))
-    // debugger
+    const { title } = chan[0];
+    let results = await Promise.all(chan.map(async source => {
+        let resource = await singleCheck(source["resource"]);
+        return ({ title, resource})
+    }))
     return results
 }
 
@@ -82,8 +88,8 @@ async function singleCheck(url) {
     
     let object = await async function (){
         try {
-            // Try fetch to 10 times to sidestep 503 issue
-            while(!json && tries < 10){
+            // Try fetch up to 12 times to sidestep 503 issue
+            while(!json && tries < 12){
                 let res = await fetch(`http://archive.org/wayback/available?url=${url}`, options)
                             .catch(err => { console.log(err) });
                 try {
@@ -133,9 +139,15 @@ async function savePage(url) {
 function displayResults(results) {
     for(let i=0; i<results.length; i++){
         for(let j=0; j<results[i].length; j++){
-            console.log(results[i][j])
+            const { resource, title } = results[i][j];
+            
+            if(resource.preserved === false){
+                const { liveLink } = resource;
+                console.log(`The resource ${liveLink} from the channel "${title}" cannot be backed up. \n`)
+            }
         }
     }
+    console.log("Consider backing these resources up manually and uploading them to the channel.")
 }
 
 function appendToPage(obj) {

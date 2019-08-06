@@ -2,6 +2,19 @@ const Arena = require('are.na');
 const fetch = require('node-fetch');
 const config = require('./config.json');
 
+// FLOW
+// archiveLinks() kicks off with access and userId, invokes fetchChans
+// fetchChans() takes userId, extracts chanId/title/contents, isolates link blocks with findLinks(chan)
+// fetchChans() then invokes extractSources(chan) to get the URLs from each link block
+// fetchChans() then invokes async checkArchive(chan), which sends links one at a time to fetch Archive URL with 
+//      singleCheck(url) 
+
+
+// 503 ISSUE
+// I can run the same fetch on the same URL ten times, and it'll 503 nine of the times but work once, 
+// or another URL 200s and returns JSON just fine nine times out of ten, but every once and a while 503s? 
+// Like it's not just random, there's a clear pattern of some links' Archive availability resource 503ing more often than others
+// I should probably just have a function that recursively tries 503 responses until they succeed, w/ upper limit like 20 fetches
 
 
 var allChans = [];
@@ -12,7 +25,7 @@ var allChans = [];
 
 function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
-    const accessToken = config.accessKey;
+    const accessToken = config.arenaToken;
     arena = new Arena({accessToken});
     
     let id=13854;
@@ -57,27 +70,32 @@ async function checkArchive(chan) {
 // [{preserved:true, arxLink:'', originalUrl:''}]
 
 async function singleCheck(url) {
-    let obj = {};
-    if (filterWaybackLinks(url)) { return ({preserved: true, arxLink: url, liveLink: ''})}
-    let res = await fetch(`http://archive.org/wayback/available?url=${url}`);
-    try { 
-        debugger
-        let json = await res.json() 
-        if (json["archived_snapshots"]) { 
-            obj.preserved = true;
-            obj.arxLink = json.archived_snapshots.closest.url;
-            obj.liveLink = url;
-        } 
-        else { 
-            console.log("LINE 75") 
+    const options = { headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json', }}
+
+    let json; let tries=0; let obj={};
+    try {
+        // Try fetch to 10 times to sidestep 503 issue
+        while(!json && tries < 10){
+            let res = await fetch(`http://archive.org/wayback/available?url=${url}`, options)
+                        .catch(err => { console.log(err) });
+            try {
+                json = await res.json() 
+            } catch {
+                tries++
+            }
         }
-    }
-    // ALL THE OBJS ARE FAILING
-    catch { obj = await savePage(url) }
         
-    // appendToPage(obj);
-    // console.log(obj)
-    debugger
+        obj.preserved = true;
+        obj.arxLink = json.archived_snapshots.closest.url;
+        obj.liveLink = url;
+        console.log(obj.arxLink + ' is successfully saved! \n')
+        
+    } catch {
+        // obj = await savePage(url)
+    }
+
     return obj;
 }
 

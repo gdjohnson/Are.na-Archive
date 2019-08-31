@@ -16,10 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 function authenticateUser(){
-    window.open(`http://dev.are.na/oauth/authorize
-        ?client_id=${config.appId}
-        &redirect_uri=${config.localCallback}
-        &response_type=code`)
+    window.open(`http://dev.are.na/oauth/authorize?client_id=${config.appId}&redirect_uri=${config.localCallback}&response_type=code`)
 }
 
 async function archiveLinks(){

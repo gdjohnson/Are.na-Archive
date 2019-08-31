@@ -12,11 +12,45 @@ const options = {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded!')
-    document.getElementById('archivePage').addEventListener('click', authenticateUser)
+    document.getElementById('archivePage').addEventListener('click', requestAuth)
+    authenticateUser();
 })
 
 function authenticateUser(){
-    window.open(`http://dev.are.na/oauth/authorize?client_id=${config.appId}&redirect_uri=${config.localCallback}&response_type=code`)
+    token = getToken()
+    if (token) {
+        requestAccess(token)
+    }
+}
+
+function getToken() {
+	//substring(1) to remove the '#'
+	hash = parseParms(document.location.hash.substring(1));
+	return hash.access_token;
+}
+
+function requestAuth(){
+    const {appId, localCallback} = config;
+    window.location = `http://dev.are.na/oauth/authorize?client_id=${appId}&redirect_uri=${localCallback}&response_type=code`
+}
+
+function requestAccess(token){
+    const {appId, appSecret, localCallback} = config;
+    const url = `https://dev.are.na/oauth/token?client_id=${appId}&client_secret=${appSecret}&code=${token}&grant_type=authorization_code&redirect_uri=${localCallback}`
+    fetch(url, {method: 'POST'})
+}
+
+function parseParms(str) {
+	var pieces = str.split("&"), data = {}, i, parts;
+	// process each query pair
+	for (i = 0; i < pieces.length; i++) {
+		parts = pieces[i].split("=");
+		if (parts.length < 2) {
+			parts.push("");
+		}
+		data[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+	}
+	return data;
 }
 
 async function archiveLinks(){

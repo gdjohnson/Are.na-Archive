@@ -2,9 +2,9 @@
   "name": "are.na-plus",
   "version": "1.0.0",
   "description": "",
-  "main": "popupt.js",
+  "main": "index.js",
   "scripts": {
-    "start": "webpack --watch --mode=development",
+    "start": "browserify index.js -o browser.js && webpack --watch --mode=development"
   },
   "repository": {
     "type": "git",

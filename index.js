@@ -12,14 +12,20 @@ const options = {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Document loaded!')
-    document.getElementById('archivePage').addEventListener('click', archiveLinks)
+    document.getElementById('archivePage').addEventListener('click', authenticateUser)
 })
+
+function authenticateUser(){
+    window.open(`http://dev.are.na/oauth/authorize
+        ?client_id=${config.appId}
+        &redirect_uri=${config.localCallback}
+        &response_type=code`)
+}
 
 async function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
     const {arenaUserId, arenaToken} = config;
     const results = await fetchChans(arenaUserId, arenaToken).catch(err => { console.error(err)});
-    // console.log(results["resource"])
     displayResults(results)
 }
 
@@ -134,5 +140,3 @@ function appendToPage(obj) {
                          Live link: ${obj.liveLink}`
     document.querySelector('archiveNow').append(graf);
 }
-
-archiveLinks()

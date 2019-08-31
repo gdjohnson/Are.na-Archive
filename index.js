@@ -10,9 +10,10 @@ const options = {
     }
 }
 
-// document.addEventListener('DOMContentLoaded', () => {
-//     document.getElementById('archivePage').addEventListener('click', archiveLinks)
-// })
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Document loaded!')
+    document.getElementById('archivePage').addEventListener('click', archiveLinks)
+})
 
 async function archiveLinks(){
     // const accessToken = document.forms['archiveNow']['code'].value
